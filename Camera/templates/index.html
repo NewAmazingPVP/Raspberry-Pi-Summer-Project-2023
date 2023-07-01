@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Video Stream</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f2f2f2;
+      }
+
+      h1 {
+        text-align: center;
+      }
+
+      .video-container {
+        position: relative;
+        width: 100%;
+        max-width: 960px;
+      }
+
+      .video-container img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      @media only screen and (orientation: landscape) {
+        body {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .video-container {
+          max-width: 100%;
+          height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Video Stream</h1>
+    <div class="video-container">
+      <img id="video-stream" src="{{ url_for('video_feed') }}" />
+    </div>
+
+    <script>
+      function adjustVideoSize() {
+        const video = document.getElementById('video-stream');
+        const isLandscape = window.matchMedia('(orientation: landscape)').matches;
+
+        if (isLandscape) {
+          video.style.maxHeight = '100%';
+          video.style.width = 'auto';
+        } else {
+          video.style.maxHeight = 'none';
+          video.style.width = '100%';
+        }
+      }
+
+      // Adjust video size on page load
+      window.addEventListener('load', adjustVideoSize);
+
+      // Adjust video size on window resize
+      window.addEventListener('resize', adjustVideoSize);
+    </script>
+  </body>
+</html>
