@@ -15,17 +15,17 @@ SERVER_PORT = 10001
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((SERVER_HOST, SERVER_PORT))
 
-#detector = ASOne(detector=asone.YOLOV8L_PYTORCH , use_cuda=True)
+detector = ASOne(detector=asone.YOLOV8L_PYTORCH , use_cuda=True)
 
-"""filter_classes = [
+filter_classes = [
     'backpack', 'umbrella', 'handbag','suitcase','sports ball',
     'baseball bat', 'baseball glove', 'tennis racket',
     'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
     'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
-    'chair', 'sofa', 'potted plant', 'bed', 'dining table', 'toilet', 'tvmonitor',
+    'chair', 'potted plant', 'bed', 'dining table', 'toilet',
     'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-    'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'person'
-]"""
+    'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'person', 'tv'
+]
 
 # Receive and display the frames
 try:
@@ -46,16 +46,16 @@ try:
         frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
         
         # Resize the frame to a smaller resolution
-        #frame = cv2.resize(frame, (640, 480))
+        #frame = cv2.resize(frame, (960, 540))
 
         # Perform image detection on the resized frame
-        #dets, img_info = detector.detect(frame, filter_classes=filter_classes)
+        dets, img_info = detector.detect(frame, filter_classes=filter_classes)
 
         # Convert dets to a numpy array if it's not already
         #dets = np.array(dets)
 
         # Filter out detections with confidence less than 0.7
-        #dets = dets[dets[:, 4] > 0.3]
+        #dets = dets[dets[:, 4] > 0.1]
 
         # Sorting the detections based on confidence scores in descending order
         #dets = dets[dets[:, 4].argsort()[::-1]]
@@ -63,11 +63,11 @@ try:
         # Limit to top 3 detections
         #dets = dets[:1]
 
-        #bbox_xyxy = dets[:, :4]
-        #scores = dets[:, 4]
-        #class_ids = dets[:, 5]
+        bbox_xyxy = dets[:, :4]
+        scores = dets[:, 4]
+        class_ids = dets[:, 5]
 
-        #frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
+        frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
 
 
         # Display the frame

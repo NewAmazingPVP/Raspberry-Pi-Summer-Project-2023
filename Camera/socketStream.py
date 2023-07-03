@@ -8,9 +8,14 @@ from libcamera import controls
 
 # Initialize the camera
 picam2 = Picamera2()
-picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (960, 720)}))
+picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
 picam2.start()
 picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
+picam2.set_controls({"AwbMode": controls.AwbModeEnum.Auto})
+picam2.set_controls({"AeConstraintMode": controls.AeConstraintModeEnum.Normal})
+picam2.set_controls({"AeExposureMode": controls.AeExposureModeEnum.Normal})
+picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Matrix})
+
 
 # Global variables for the server
 SERVER_HOST = "0.0.0.0"
