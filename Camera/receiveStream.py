@@ -8,7 +8,7 @@ from asone import utils
 from asone import ASOne
 
 # Server host and port
-SERVER_HOST = "192.168.1.157"
+SERVER_HOST = "192.168.1.167"
 SERVER_PORT = 10001
 
 # Host and port for sending processed frames
