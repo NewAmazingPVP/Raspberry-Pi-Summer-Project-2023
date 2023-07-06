@@ -64,10 +64,10 @@ while True:
 
             bbox_xyxy = dets[:, :4]
             class_ids = dets[:, 5]
-
+            
             # Draw bounding boxes on the frame
             frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
-
+                        
             # Encode the processed frame and send it over the network
             _, frame_data = cv2.imencode('.jpg', frame)
             frame_size = len(frame_data)
