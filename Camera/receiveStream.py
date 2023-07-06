@@ -11,14 +11,14 @@ from asone import ASOne
 SERVER_HOST = "192.168.1.157"
 SERVER_PORT = 10001
 
-# Create a socket connection to the server
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((SERVER_HOST, SERVER_PORT))
+# Host and port for sending processed frames
+OUTPUT_HOST = '0.0.0.0'
+OUTPUT_PORT = 10003
 
-detector = ASOne(detector=asone.YOLOV8L_PYTORCH , use_cuda=True)
+detector = ASOne(detector=asone.YOLOV8L_PYTORCH, use_cuda=True)
 
 filter_classes = [
-    'backpack', 'umbrella', 'handbag','suitcase','sports ball',
+    'backpack', 'umbrella', 'handbag', 'suitcase', 'sports ball',
     'baseball bat', 'baseball glove', 'tennis racket',
     'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl',
     'banana', 'apple', 'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake',
@@ -27,56 +27,67 @@ filter_classes = [
     'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'person', 'tv'
 ]
 
-# Receive and display the frames
-try:
-    while True:
-        # Receive the frame size as a 4-byte integer
-        frame_size_data = client_socket.recv(4)
+# Create a socket connection to the server
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket.connect((SERVER_HOST, SERVER_PORT))
 
-        # Unpack the frame size
-        frame_size = struct.unpack("!I", frame_size_data)[0]
+# Create a socket for sending processed frames
+output_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+output_socket.bind((OUTPUT_HOST, OUTPUT_PORT))
+output_socket.listen(1)
 
-        # Receive the frame data
-        frame_data = b""
-        while len(frame_data) < frame_size:
-            remaining_size = frame_size - len(frame_data)
-            frame_data += client_socket.recv(min(4096, remaining_size))
+while True:
+    # Wait for a new client connection
+    output_conn, addr = output_socket.accept()
+    print("Client connected:", addr)
 
-        # Decode the frame using OpenCV
-        frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
-        
-        # Resize the frame to a smaller resolution
-        #frame = cv2.resize(frame, (960, 540))
+    try:
+        # Receive and display the frames
+        while True:
+            # Receive the frame size as a 4-byte integer
+            frame_size_data = client_socket.recv(4)
 
-        # Perform image detection on the resized frame
-        dets, img_info = detector.detect(frame, filter_classes=filter_classes)
+            # Unpack the frame size
+            frame_size = struct.unpack("!I", frame_size_data)[0]
 
-        # Convert dets to a numpy array if it's not already
-        #dets = np.array(dets)
+            # Receive the frame data
+            frame_data = b""
+            while len(frame_data) < frame_size:
+                remaining_size = frame_size - len(frame_data)
+                frame_data += client_socket.recv(min(4096, remaining_size))
 
-        # Filter out detections with confidence less than 0.7
-        #dets = dets[dets[:, 4] > 0.1]
+            # Decode the frame using OpenCV
+            frame = cv2.imdecode(np.frombuffer(frame_data, np.uint8), cv2.IMREAD_COLOR)
 
-        # Sorting the detections based on confidence scores in descending order
-        #dets = dets[dets[:, 4].argsort()[::-1]]
+            # Perform image detection on the frame
+            dets, img_info = detector.detect(frame, filter_classes=filter_classes)
 
-        # Limit to top 3 detections
-        #dets = dets[:1]
+            bbox_xyxy = dets[:, :4]
+            class_ids = dets[:, 5]
 
-        bbox_xyxy = dets[:, :4]
-        scores = dets[:, 4]
-        class_ids = dets[:, 5]
+            # Draw bounding boxes on the frame
+            frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
 
-        frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
+            # Encode the processed frame and send it over the network
+            _, frame_data = cv2.imencode('.jpg', frame)
+            frame_size = len(frame_data)
 
+            try:
+                # Send the frame size as a 4-byte integer
+                output_conn.send(struct.pack("!I", frame_size))
 
-        # Display the frame
-        cv2.imshow("Frame", frame)
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
+                # Send the frame data
+                output_conn.sendall(frame_data.tobytes())
+            except ConnectionAbortedError:
+                print("Connection with client aborted.")
+                break
 
+    except ConnectionResetError:
+        print("Connection with client reset.")
+    finally:
+        # Clean up the connection
+        output_conn.close()
 
-finally:
-    # Clean up the connection
-    cv2.destroyAllWindows()
-    client_socket.close()
+# Clean up the sockets
+client_socket.close()
+output_socket.close()
