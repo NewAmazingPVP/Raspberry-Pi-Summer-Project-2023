@@ -16,8 +16,6 @@ picam2.set_controls({"AeConstraintMode": controls.AeConstraintModeEnum.Normal})
 picam2.set_controls({"AeExposureMode": controls.AeExposureModeEnum.Normal})
 picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Matrix})
 
-
-# Global variables for the server
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 10001
 BUFFER_SIZE = 4096
@@ -45,7 +43,6 @@ def handle_client(client_socket):
             client_socket.sendall(frame_data)
 
     except:
-        # Error occurred, close the client socket
         client_socket.close()
 
 # Create the server socket
@@ -58,7 +55,6 @@ print(f"Server is listening on {SERVER_HOST}:{SERVER_PORT}")
 
 try:
     while True:
-        # Accept a client connection
         client_socket, client_address = server_socket.accept()
         print(f"New client connected: {client_address}")
 
@@ -67,6 +63,5 @@ try:
         client_thread.start()
 
 except KeyboardInterrupt:
-    # Server stopped by keyboard interrupt, close the server socket
     server_socket.close()
     print("Server stopped")

@@ -2,16 +2,13 @@ import cv2
 import socket
 import struct
 import numpy as np
-import time
 import asone
 from asone import utils
 from asone import ASOne
 
-# Server host and port
 SERVER_HOST = "192.168.1.167"
 SERVER_PORT = 10001
 
-# Host and port for sending processed frames
 OUTPUT_HOST = '0.0.0.0'
 OUTPUT_PORT = 10003
 
@@ -47,7 +44,6 @@ while True:
             # Receive the frame size as a 4-byte integer
             frame_size_data = client_socket.recv(4)
 
-            # Unpack the frame size
             frame_size = struct.unpack("!I", frame_size_data)[0]
 
             # Receive the frame data
@@ -65,7 +61,6 @@ while True:
             bbox_xyxy = dets[:, :4]
             class_ids = dets[:, 5]
             
-            # Draw bounding boxes on the frame
             frame = utils.draw_boxes(frame, bbox_xyxy, class_ids=class_ids)
                         
             # Encode the processed frame and send it over the network
@@ -85,9 +80,4 @@ while True:
     except ConnectionResetError:
         print("Connection with client reset.")
     finally:
-        # Clean up the connection
         output_conn.close()
-
-# Clean up the sockets
-client_socket.close()
-output_socket.close()
