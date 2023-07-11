@@ -7,7 +7,9 @@ from picamera2 import Picamera2
 from libcamera import controls
 
 # Initialize the camera
-picam2 = Picamera2()
+
+tuning = Picamera2.load_tuning_file("imx708_noir.json")
+picam2 = Picamera2(tuning=tuning)
 picam2.configure(picam2.create_preview_configuration(main={"format": 'XRGB8888', "size": (1920, 1080)}))
 picam2.start()
 picam2.set_controls({"AfMode": controls.AfModeEnum.Continuous})
@@ -15,6 +17,7 @@ picam2.set_controls({"AwbMode": controls.AwbModeEnum.Auto})
 picam2.set_controls({"AeConstraintMode": controls.AeConstraintModeEnum.Normal})
 picam2.set_controls({"AeExposureMode": controls.AeExposureModeEnum.Normal})
 picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Matrix})
+#picam2.set_controls({'ColourGains': (1.0, 1.2)})
 
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 10001
@@ -36,13 +39,12 @@ def handle_client(client_socket):
             # Pack the frame size as a 4-byte integer
             frame_size_data = struct.pack("!I", frame_size)
 
-            # Send the frame size first
             client_socket.sendall(frame_size_data)
 
-            # Send the frame data
             client_socket.sendall(frame_data)
 
     except:
+        # Error occurred, close the client socket
         client_socket.close()
 
 # Create the server socket
