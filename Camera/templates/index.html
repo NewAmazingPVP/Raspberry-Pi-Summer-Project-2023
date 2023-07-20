@@ -61,8 +61,11 @@
           video.style.width = '100%';
         }
       }
+
+      // Adjust video size on page load
       window.addEventListener('load', adjustVideoSize);
 
+      // Adjust video size on window resize
       window.addEventListener('resize', adjustVideoSize);
     </script>
   </body>

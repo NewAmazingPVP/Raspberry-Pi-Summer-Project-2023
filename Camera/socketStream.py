@@ -19,6 +19,7 @@ picam2.set_controls({"AeExposureMode": controls.AeExposureModeEnum.Normal})
 picam2.set_controls({"AeMeteringMode": controls.AeMeteringModeEnum.Matrix})
 #picam2.set_controls({'ColourGains': (1.0, 1.2)})
 
+# Global variables for the server
 SERVER_HOST = "0.0.0.0"
 SERVER_PORT = 10001
 BUFFER_SIZE = 4096
@@ -39,8 +40,10 @@ def handle_client(client_socket):
             # Pack the frame size as a 4-byte integer
             frame_size_data = struct.pack("!I", frame_size)
 
+            # Send the frame size first
             client_socket.sendall(frame_size_data)
 
+            # Send the frame data
             client_socket.sendall(frame_data)
 
     except:
@@ -57,6 +60,7 @@ print(f"Server is listening on {SERVER_HOST}:{SERVER_PORT}")
 
 try:
     while True:
+        # Accept a client connection
         client_socket, client_address = server_socket.accept()
         print(f"New client connected: {client_address}")
 
@@ -65,5 +69,6 @@ try:
         client_thread.start()
 
 except KeyboardInterrupt:
+    # Server stopped by keyboard interrupt, close the server socket
     server_socket.close()
     print("Server stopped")
