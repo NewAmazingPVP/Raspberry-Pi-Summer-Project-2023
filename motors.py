@@ -4,20 +4,20 @@ import time
 # Set GPIO numbering mode
 GPIO.setmode(GPIO.BCM)
 
-# Define GPIO pins for motor control
-Front_ENA = 26
-Front_IN1 = 19
-Front_IN2 = 13
-Front_IN3 = 6
-Front_IN4 = 5
-Front_ENB = 0
+# Define GPIO pins for motor control **NEW NUMBERS**
+Front_ENA = 19
+Front_IN1 = 26
+Front_IN2 = 6
+Front_IN3 = 5
+Front_IN4 = 22
+Front_ENB = 13
 
-Back_ENB = 11
-Back_IN4 = 9
-Back_IN3 = 10
-Back_IN2 = 22
-Back_IN1 = 27
-Back_ENA = 17
+Back_ENB = 12
+Back_IN4 = 16
+Back_IN3 = 25
+Back_IN2 = 24
+Back_IN1 = 23
+Back_ENA = 18
 
 # Set up GPIO pins as outputs
 GPIO.setup(Front_ENA, GPIO.OUT)
