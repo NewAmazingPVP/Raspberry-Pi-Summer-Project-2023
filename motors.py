@@ -1,10 +1,10 @@
 import RPi.GPIO as GPIO
 import time
+import pygame
 
 # Set GPIO numbering mode
 GPIO.setmode(GPIO.BCM)
 
-# Define GPIO pins for motor control **NEW NUMBERS**
 Front_ENA = 19
 Front_IN1 = 26
 Front_IN2 = 6
@@ -35,11 +35,11 @@ GPIO.setup(Back_IN4, GPIO.OUT)
 GPIO.setup(Back_ENB, GPIO.OUT)
 
 # Create PWM objects for controlling the motor speed
-Front_pwm_a = GPIO.PWM(Front_ENA, 100)  # 100 Hz frequency
-Front_pwm_b = GPIO.PWM(Front_ENB, 100)  # 100 Hz frequency
+Front_pwm_a = GPIO.PWM(Front_ENA, 100)  
+Front_pwm_b = GPIO.PWM(Front_ENB, 100) 
 
 Back_pwm_a = GPIO.PWM(Back_ENA, 100)  # 100 Hz frequency
-Back_pwm_b = GPIO.PWM(Back_ENB, 100)  # 100 Hz frequency
+Back_pwm_b = GPIO.PWM(Back_ENB, 100)  
 
 # Start PWM with 0% duty cycle (stopped initially)
 Front_pwm_a.start(0)
@@ -48,60 +48,76 @@ Front_pwm_b.start(0)
 Back_pwm_a.start(0)
 Back_pwm_b.start(0)
 
-# Function to control the motors and their speed
-def set_motor_speed(Front_speed_a, Front_speed_b, Back_speed_a, Back_speed_b):
-    # Set Front motors
-    if Front_speed_a >= 0:
+# Function to control the motors and their speed for Mecanum wheels
+def set_mecanum_speed(front_left, front_right, back_left, back_right):
+    if front_left >= 0:
         GPIO.output(Front_IN1, GPIO.HIGH)
         GPIO.output(Front_IN2, GPIO.LOW)
     else:
         GPIO.output(Front_IN1, GPIO.LOW)
         GPIO.output(Front_IN2, GPIO.HIGH)
-    
-    if Front_speed_b >= 0:
+
+    if front_right >= 0:
         GPIO.output(Front_IN3, GPIO.HIGH)
         GPIO.output(Front_IN4, GPIO.LOW)
     else:
         GPIO.output(Front_IN3, GPIO.LOW)
         GPIO.output(Front_IN4, GPIO.HIGH)
-    
+
     # Set Back motors
-    if Back_speed_a >= 0:
+    if back_left >= 0:
         GPIO.output(Back_IN1, GPIO.HIGH)
         GPIO.output(Back_IN2, GPIO.LOW)
     else:
         GPIO.output(Back_IN1, GPIO.LOW)
         GPIO.output(Back_IN2, GPIO.HIGH)
-    
-    if Back_speed_b >= 0:
+
+    if back_right >= 0:
         GPIO.output(Back_IN3, GPIO.HIGH)
         GPIO.output(Back_IN4, GPIO.LOW)
     else:
         GPIO.output(Back_IN3, GPIO.LOW)
         GPIO.output(Back_IN4, GPIO.HIGH)
-    
+
     # Set motor speeds
-    Front_pwm_a.ChangeDutyCycle(abs(Front_speed_a))
-    Front_pwm_b.ChangeDutyCycle(abs(Front_speed_b))
-    Back_pwm_a.ChangeDutyCycle(abs(Back_speed_a))
-    Back_pwm_b.ChangeDutyCycle(abs(Back_speed_b))
+    Front_pwm_a.ChangeDutyCycle(abs(front_left))
+    Front_pwm_b.ChangeDutyCycle(abs(front_right))
+    Back_pwm_a.ChangeDutyCycle(abs(back_left))
+    Back_pwm_b.ChangeDutyCycle(abs(back_right))
 
 
-set_motor_speed(3, 3, 3, 3)  # Move forward at 3% speed all motors
-time.sleep(20)  # Keep moving for 20 seconds
+pygame.init()
+pygame.joystick.init()
 
-set_motor_speed(100, 100, 100, 100)  # Move forward at 100% speed all motors
-time.sleep(10)  # Keep moving for 10 seconds
+try:
+    joystick = pygame.joystick.Joystick(0)
+    joystick.init()
 
-set_motor_speed(0, 0, 0, 0)  # Stop
-time.sleep(4)  # Stop for 4 seconds
+    while True:
+        pygame.event.pump()
 
-set_motor_speed(-50, -50, -50, -50)  # Move backward at 50% speed all motors
-time.sleep(20)  # Keep moving for 20 seconds
+        # X-axis
+        x_value = joystick.get_axis(0)
+        
+        # Y-axis
+        y_value = joystick.get_axis(1)
 
-# Cleanup GPIO
-Front_pwm_a.stop()
-Front_pwm_b.stop()
-Back_pwm_a.stop()
-Back_pwm_b.stop()
-GPIO.cleanup()
+        # Scale value to reach maximum motor speed (100)
+        front_left_speed = (y_value - x_value) * 100
+        front_right_speed = (y_value + x_value) * 100
+        back_left_speed = (y_value + x_value) * 100
+        back_right_speed = (y_value - x_value) * 100
+
+        set_mecanum_speed(front_left_speed, front_right_speed, back_left_speed, back_right_speed)
+
+except KeyboardInterrupt:
+    pass
+
+finally:
+    # Stop the motors and clean up GPIO
+    set_mecanum_speed(0, 0, 0, 0)
+    Front_pwm_a.stop()
+    Front_pwm_b.stop()
+    Back_pwm_a.stop()
+    Back_pwm_b.stop()
+    GPIO.cleanup()
