@@ -84,29 +84,46 @@ def set_mecanum_speed(front_left, front_right, back_left, back_right):
     Front_pwm_b.ChangeDutyCycle(abs(front_right))
     Back_pwm_a.ChangeDutyCycle(abs(back_left))
     Back_pwm_b.ChangeDutyCycle(abs(back_right))
+    
 
-
-pygame.init()
 pygame.joystick.init()
 
+pygame.display.init()
+
 try:
+
     joystick = pygame.joystick.Joystick(0)
     joystick.init()
 
     while True:
         pygame.event.pump()
 
-        # X-axis
-        x_value = joystick.get_axis(0)
+        x_value_left = joystick.get_axis(0)
+        y_value_left = joystick.get_axis(1)
         
-        # Y-axis
-        y_value = joystick.get_axis(1)
+        x_value_right = joystick.get_axis(2)
+        y_value_right = joystick.get_axis(3)
 
-        # Scale value to reach maximum motor speed (100)
-        front_left_speed = (y_value - x_value) * 100
-        front_right_speed = (y_value + x_value) * 100
-        back_left_speed = (y_value + x_value) * 100
-        back_right_speed = (y_value - x_value) * 100
+        # Scale the axis values to match the motor speed range (-100 to 100) for left stick
+        front_left_speed = (y_value_left - x_value_left) * 50
+        front_right_speed = (y_value_left + x_value_left) * 50
+        back_left_speed = (y_value_left + x_value_left) * 50
+        back_right_speed = (y_value_left - x_value_left) * 50
+
+        # Scale the axis values to control the rotation of the car using the right stick
+        rotation_speed = x_value_right * 100
+
+        # Calculate the individual motor speeds to achieve rotation
+        front_left_rotation = rotation_speed
+        front_right_rotation = -rotation_speed
+        back_left_rotation = rotation_speed
+        back_right_rotation = -rotation_speed
+
+        # Combine the rotation speeds with the left joystick speeds
+        front_left_speed += front_left_rotation
+        front_right_speed += front_right_rotation
+        back_left_speed += back_left_rotation
+        back_right_speed += back_right_rotation
 
         set_mecanum_speed(front_left_speed, front_right_speed, back_left_speed, back_right_speed)
 
@@ -121,3 +138,5 @@ finally:
     Back_pwm_a.stop()
     Back_pwm_b.stop()
     GPIO.cleanup()
+
+
